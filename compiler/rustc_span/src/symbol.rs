@@ -1012,6 +1012,7 @@ symbols! {
         fmul_algebraic,
         fmul_fast,
         fmuladd,
+        fn_addr_trait,
         fn_align,
         fn_body,
         fn_delegation,

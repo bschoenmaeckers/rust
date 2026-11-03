@@ -674,7 +674,7 @@ where
                         ty::ClosureKind::FnOnce,
                     )
                 }
-                Some(SolverTraitLangItem::FnPtrTrait) => {
+                Some(SolverTraitLangItem::FnPtrTrait | SolverTraitLangItem::FnAddrTrait) => {
                     G::consider_builtin_fn_ptr_trait_candidate(self, goal)
                 }
                 Some(SolverTraitLangItem::AsyncFnKindHelper) => {

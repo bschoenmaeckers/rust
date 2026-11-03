@@ -325,13 +325,11 @@ unsafe extern "C" {
     pub type Code;
 }
 
-/// A common trait implemented by all function pointers.
+/// Implemented for function pointers and types that coerce to function pointers
 #[unstable(feature = "fn_static", issue = "148768")]
-#[lang = "fn_ptr_trait"]
-#[fundamental]
+#[lang = "fn_addr_trait"]
 #[rustc_deny_explicit_impl]
-#[rustc_dyn_incompatible_trait]
-pub trait FnPtr: Copy {
+pub unsafe trait FnAddr: Copy {
     /// Returns the address of the function pointer.
     #[unstable(feature = "fn_static", issue = "148768")]
     fn addr(self) -> usize {
@@ -342,13 +340,21 @@ pub trait FnPtr: Copy {
     #[unstable(feature = "fn_static", issue = "148768")]
     #[lang = "fn_ptr_as_ptr"]
     fn as_ptr(self) -> NonNull<Code>;
+}
 
+/// A common trait implemented by all function pointers.
+#[unstable(feature = "fn_static", issue = "148768")]
+#[lang = "fn_ptr_trait"]
+#[fundamental]
+#[rustc_deny_explicit_impl]
+#[rustc_dyn_incompatible_trait]
+pub unsafe trait FnPtr: FnAddr {
     /// Constructs a function pointer from a `NonNull` pointer.
     ///
     /// # Safety
     ///
     /// The function pointer must have been obtained
-    /// from an [`FnPtr::as_ptr`] call from a function
+    /// from an [`FnAddr::as_ptr`] call from a function
     /// pointer type that is ABI compatible.
     #[unstable(feature = "fn_static", issue = "148768")]
     #[lang = "fn_ptr_from_ptr"]

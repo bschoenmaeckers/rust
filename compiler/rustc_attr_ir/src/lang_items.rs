@@ -186,6 +186,7 @@ language_item_table! {
     UnsafeUnpin,             sym::unsafe_unpin,        unsafe_unpin_trait,         Target::Trait,          GenericRequirement::Exact(0);
 
     FnPtrTrait,              sym::fn_ptr_trait,        fn_ptr_trait,               Target::Trait,          GenericRequirement::Exact(0);
+    FnAddrTrait,             sym::fn_addr_trait,       fn_addr_trait,              Target::Trait,          GenericRequirement::Exact(0);
     FnPtrAsPtr,              sym::fn_ptr_as_ptr,       fn_ptr_as_ptr,              Target::Method(MethodKind::Trait { body: false }), GenericRequirement::None;
     FnPtrFromPtr,            sym::fn_ptr_from_ptr,     fn_ptr_from_ptr,            Target::Method(MethodKind::Trait { body: false }), GenericRequirement::None;
     Code,                    sym::code,                code,                       Target::ForeignTy,      GenericRequirement::None;

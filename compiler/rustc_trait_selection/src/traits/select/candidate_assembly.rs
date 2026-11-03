@@ -123,7 +123,7 @@ impl<'cx, 'tcx> SelectionContext<'cx, 'tcx> {
                 Some(LangItem::Tuple) => {
                     self.assemble_candidate_for_tuple(obligation, &mut candidates);
                 }
-                Some(LangItem::FnPtrTrait) => {
+                Some(LangItem::FnPtrTrait | LangItem::FnAddrTrait) => {
                     self.assemble_candidates_for_fn_ptr_trait(obligation, &mut candidates);
                 }
                 Some(LangItem::BikeshedGuaranteedNoDrop) => {
