@@ -360,3 +360,16 @@ pub unsafe trait FnPtr: FnAddr {
     #[lang = "fn_ptr_from_ptr"]
     unsafe fn from_ptr(ptr: NonNull<Code>) -> Self;
 }
+
+/// Implemented for all types that coerce to function pointers.
+#[unstable(feature = "fn_static", issue = "148768")]
+#[lang = "fn_static"]
+#[rustc_deny_explicit_impl]
+pub unsafe trait FnStatic: FnAddr {
+    /// The function instance.
+    #[lang = "fn_static_instance"]
+    #[unstable(feature = "fn_static", issue = "148768")]
+    const INSTANCE: Self;
+    // type FnPtr: FnPtr;
+    // fn as_fn(self) -> Self::FnPtr;
+}

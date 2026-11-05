@@ -314,12 +314,28 @@ fn resolve_associated_item<'tcx>(
                 }
             } else if tcx.is_lang_item(trait_ref.def_id, LangItem::FnAddrTrait) {
                 let self_ty = trait_ref.self_ty();
-                if !matches!(self_ty.kind(), ty::FnPtr(..)) {
+                if !matches!(self_ty.kind(), ty::FnPtr(..) | ty::FnDef(..) | ty::Closure(..)) {
                     return Ok(None);
                 }
                 if tcx.is_lang_item(trait_item_id, LangItem::FnPtrAsPtr) {
                     Some(Instance {
                         def: ty::InstanceKind::Shim(ty::ShimKind::FnPtrAsPtr(
+                            trait_item_id,
+                            self_ty,
+                        )),
+                        args: rcvr_args,
+                    })
+                } else {
+                    Some(Instance { def: ty::InstanceKind::Item(trait_item_id), args: rcvr_args })
+                }
+            } else if tcx.is_lang_item(trait_ref.def_id, LangItem::FnStatic) {
+                let self_ty = trait_ref.self_ty();
+                if !matches!(self_ty.kind(), ty::FnDef(..) | ty::Closure(..)) {
+                    return Ok(None);
+                }
+                if tcx.is_lang_item(trait_item_id, LangItem::FnStaticInstance) {
+                    Some(Instance {
+                        def: ty::InstanceKind::Shim(ty::ShimKind::FnStaticInstance(
                             trait_item_id,
                             self_ty,
                         )),
