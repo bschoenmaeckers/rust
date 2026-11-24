@@ -124,7 +124,7 @@ impl<'tcx> InterpCx<'tcx, CompileTimeMachine<'tcx>> {
                         ValidityRequirement::Uninit => bug!("assert_uninit_valid doesn't exist"),
                     });
 
-                    let span = self.caller_location();
+                    let (span, _) = self.caller_location();
                     let (file, line, col) = self.location_triple_for_span(span);
 
                     InterpResult::from(Err::<(), _>(ConstEvalErrKind::Panic {

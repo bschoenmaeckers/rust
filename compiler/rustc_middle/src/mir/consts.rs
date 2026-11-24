@@ -530,13 +530,14 @@ impl<'tcx> Display for Const<'tcx> {
 // Const-related utilities
 
 impl<'tcx> TyCtxt<'tcx> {
-    pub fn span_as_caller_location(self, span: Span) -> ConstValue {
+    pub fn span_as_caller_location(self, span: Span, function_def: DefId) -> ConstValue {
         let topmost = span.ctxt().outer_expn().expansion_cause().unwrap_or(span);
         let caller = self.sess.source_map().lookup_char_pos(topmost.lo());
         self.const_caller_location(
             Symbol::intern(
                 &caller.file.name.display(RemapPathScopeComponents::MACRO).to_string_lossy(),
             ),
+            Symbol::intern(&with_no_trimmed_paths!(self.def_path_str(function_def))),
             caller.line as u32,
             caller.col_display as u32 + 1,
         )

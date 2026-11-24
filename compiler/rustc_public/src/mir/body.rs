@@ -8,7 +8,7 @@ use crate::ty::{
     AdtDef, ClosureDef, CoroutineClosureDef, CoroutineDef, GenericArgs, MirConst, Movability,
     Region, RigidTy, Ty, TyConst, TyKind, VariantIdx,
 };
-use crate::{Error, Opaque, Span, Symbol};
+use crate::{DefId, Error, Opaque, Span, Symbol};
 
 /// The rustc_public's IR representation of a single function.
 #[derive(Clone, Debug, Serialize)]
@@ -36,6 +36,9 @@ pub struct Body {
     /// The span that covers the entire function body.
     pub span: Span,
 
+    /// Definition of the function owning this body.
+    pub function_def: DefId,
+
     /// Source scope information, used by [`Body::caller_location`] for inline-aware resolution.
     ///
     /// Invariants:
@@ -61,6 +64,7 @@ impl Body {
         var_debug_info: Vec<VarDebugInfo>,
         spread_arg: Option<Local>,
         span: Span,
+        function_def: DefId,
     ) -> Self {
         assert!(
             locals.len() > arg_count,
@@ -70,7 +74,16 @@ impl Body {
             SourceScopeInfo { inlined: None, inlined_parent_scope: None };
             max_scope(&blocks) as usize + 1
         ];
-        Self { blocks, locals, arg_count, var_debug_info, spread_arg, span, source_scopes }
+        Self {
+            blocks,
+            locals,
+            arg_count,
+            var_debug_info,
+            spread_arg,
+            span,
+            function_def,
+            source_scopes,
+        }
     }
 
     /// Return local that holds this function's return value.
@@ -154,9 +167,9 @@ impl Body {
         let mut scope = terminator.source_info.scope;
 
         while let Some(scope_data) = self.source_scopes.get(scope as usize) {
-            if let Some((track_caller, callsite_span)) = &scope_data.inlined {
+            if let Some((track_caller, callsite_span, function_def)) = &scope_data.inlined {
                 if !track_caller {
-                    return span.as_caller_location();
+                    return span.as_caller_location(*function_def);
                 }
                 span = *callsite_span;
             }
@@ -167,7 +180,7 @@ impl Body {
             }
         }
 
-        inherited_location.unwrap_or_else(|| span.as_caller_location())
+        inherited_location.unwrap_or_else(|| span.as_caller_location(self.function_def))
     }
 }
 
@@ -799,13 +812,13 @@ pub type SourceScope = u32;
 ///
 /// Each entry corresponds to a source scope in the MIR body. Most scopes have no
 /// inlined data. For scopes introduced by MIR inlining, `inlined` records whether
-/// the inlined callee is `#[track_caller]` and the span of the call site.
+/// the inlined callee is `#[track_caller]`, the span of the call site, and its definition.
 #[derive(Clone, Debug, Default, Eq, PartialEq, Serialize)]
 pub(crate) struct SourceScopeInfo {
     /// Present when this scope was introduced by inlining a function.
     /// The `bool` is `true` if the inlined callee is `#[track_caller]`.
-    /// The `Span` is the call site where inlining occurred.
-    pub inlined: Option<(bool, Span)>,
+    /// The `Span` and `DefId` is the function def at the call site where inlining occurred.
+    pub inlined: Option<(bool, Span, DefId)>,
     /// Nearest (transitive) parent scope that was itself inlined.
     /// Skips over intermediate scopes within the same inlined function body.
     pub inlined_parent_scope: Option<SourceScope>,

@@ -1,6 +1,5 @@
 use std::cell::RefCell;
 use std::collections::hash_map::Entry;
-use std::convert::identity;
 
 use either::{Left, Right};
 use rustc_abi::{Align, HasDataLayout, Size, TargetDataLayout};
@@ -380,7 +379,7 @@ impl<'tcx, M: Machine<'tcx>> InterpCx<'tcx, M> {
     /// Grabs the implicit caller location argument, if there is one,
     /// or falls back to the "current" span. This matches the `caller_location` intrinsic,
     /// and is primarily intended for the panic machinery.
-    pub(crate) fn caller_location(&self) -> Span {
+    pub(crate) fn caller_location(&self) -> (Span, DefId) {
         let frame = self.frame();
 
         // Assert that the frame we look at is actually executing code currently
@@ -411,7 +410,12 @@ impl<'tcx, M: Machine<'tcx>> InterpCx<'tcx, M> {
         // Directly returning `frame.track_caller_arg` would be wrong if we are
         // in code that got inlined from another function. `caller_location_span`
         // handles that for us.
-        frame.body.caller_location_span(source_info, frame.track_caller_arg, *self.tcx, identity)
+        frame.body.caller_location(
+            source_info,
+            frame.track_caller_arg,
+            *self.tcx,
+            |span, def_id| (span, def_id),
+        )
     }
 
     /// Returns the actual dynamic size and alignment of the place at the given type.

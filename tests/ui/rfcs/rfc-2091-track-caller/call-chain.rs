@@ -1,3 +1,4 @@
+#![feature(location_function)]
 //@ run-pass
 //@ revisions: default mir-opt
 //@[default] compile-flags: -Zinline-mir=false
@@ -15,6 +16,7 @@ impl Foo {
         assert_eq!(loc.file(), file!(), "file mismatch");
         assert_eq!(loc.line(), line, "line mismatch");
         assert_eq!(loc.column(), col, "column mismatch");
+        assert_eq!(loc.function(), Some("main"));
         self
     }
 }

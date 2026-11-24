@@ -410,6 +410,7 @@ macro_rules! super_body {
     ($self:ident, $body:ident, ) => {
         let Body {
             blocks,
+            function_def: _,
             locals: _,
             arg_count,
             var_debug_info,

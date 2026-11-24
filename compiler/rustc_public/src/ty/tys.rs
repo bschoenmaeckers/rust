@@ -9,7 +9,7 @@ use crate::mir::mono::{Instance, StaticDef};
 use crate::mir::{Mutability, Safety};
 use crate::target::MachineInfo;
 use crate::ty::def::*;
-use crate::{Error, Filename, Opaque, Symbol, ThreadLocalIndex, with};
+use crate::{DefId, Error, Filename, Opaque, Symbol, ThreadLocalIndex, with};
 
 #[derive(Copy, Clone, Eq, PartialEq, Hash)]
 pub struct Ty(usize, ThreadLocalIndex);
@@ -294,8 +294,8 @@ impl Span {
     }
 
     /// Create a `&'static core::panic::Location<'static>` constant from this span.
-    pub(crate) fn as_caller_location(&self) -> MirConst {
-        with(|c| c.span_as_caller_location(*self))
+    pub(crate) fn as_caller_location(&self, function_def: DefId) -> MirConst {
+        with(|c| c.span_as_caller_location(*self, function_def))
     }
 }
 

@@ -515,10 +515,11 @@ impl<'tcx> CompilerInterface<'tcx> {
     }
 
     /// Create a caller location constant from a span.
-    pub(crate) fn span_as_caller_location(&self, span: Span) -> MirConst {
+    pub(crate) fn span_as_caller_location(&self, span: Span, function_def: DefId) -> MirConst {
         self.with_cx(|tables, cx| {
             let sp = tables.spans[span];
-            cx.span_as_caller_location(sp).stable(tables, cx)
+            let function_def = tables.def_ids[function_def];
+            cx.span_as_caller_location(sp, function_def).stable(tables, cx)
         })
     }
 

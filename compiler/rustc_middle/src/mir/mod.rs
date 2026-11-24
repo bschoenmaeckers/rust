@@ -682,12 +682,12 @@ impl<'tcx> Body<'tcx> {
     /// is interesting because of inlining: the `#[track_caller]` attribute of inlined functions
     /// must be honored. Falls back to the `tracked_caller` value for `#[track_caller]` functions,
     /// or the function's scope.
-    pub fn caller_location_span<T>(
+    pub fn caller_location<T>(
         &self,
         mut source_info: SourceInfo,
         caller_location: Option<T>,
         tcx: TyCtxt<'tcx>,
-        from_span: impl FnOnce(Span) -> T,
+        from_span: impl FnOnce(Span, DefId) -> T,
     ) -> T {
         loop {
             let scope_data = &self.source_scopes[source_info.scope];
@@ -696,7 +696,7 @@ impl<'tcx> Body<'tcx> {
                 // Stop inside the most nested non-`#[track_caller]` function,
                 // before ever reaching its caller (which is irrelevant).
                 if !callee.def.requires_caller_location(tcx) {
-                    return from_span(source_info.span);
+                    return from_span(source_info.span, callee.def_id());
                 }
                 source_info.span = callsite_span;
             }
@@ -709,7 +709,7 @@ impl<'tcx> Body<'tcx> {
         }
 
         // No inlined `SourceScope`s, or all of them were `#[track_caller]`.
-        caller_location.unwrap_or_else(|| from_span(source_info.span))
+        caller_location.unwrap_or_else(|| from_span(source_info.span, self.source.def_id()))
     }
 
     #[track_caller]

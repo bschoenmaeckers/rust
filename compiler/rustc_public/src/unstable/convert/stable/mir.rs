@@ -24,6 +24,7 @@ impl<'tcx> Stable<'tcx> for mir::Body<'tcx> {
         cx: &CompilerCtxt<'cx, BridgeTys>,
     ) -> Self::T {
         crate::mir::Body {
+            function_def: self.source.def_id().stable(tables, cx),
             blocks: self
                 .basic_blocks
                 .iter()
@@ -58,7 +59,11 @@ impl<'tcx> Stable<'tcx> for mir::Body<'tcx> {
                 .iter()
                 .map(|scope_data| SourceScopeInfo {
                     inlined: scope_data.inlined.map(|(instance, span)| {
-                        (instance.def.requires_caller_location(cx.tcx), span.stable(tables, cx))
+                        (
+                            instance.def.requires_caller_location(cx.tcx),
+                            span.stable(tables, cx),
+                            instance.def_id().stable(tables, cx),
+                        )
                     }),
                     inlined_parent_scope: scope_data.inlined_parent_scope.map(|s| s.as_u32()),
                 })

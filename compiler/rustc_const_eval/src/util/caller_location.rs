@@ -12,6 +12,7 @@ use crate::interpret::*;
 fn alloc_caller_location<'tcx>(
     ecx: &mut CompileTimeInterpCx<'tcx>,
     filename: Symbol,
+    function_name: Symbol,
     line: u32,
     col: u32,
 ) -> MPlaceTy<'tcx> {
@@ -30,6 +31,18 @@ fn alloc_caller_location<'tcx>(
         let file_len = u64::try_from(filename.len()).unwrap();
         Immediate::new_slice(file_ptr.into(), file_len, ecx)
     };
+    let function_name = {
+        if loc_details.func {
+            let function_name = function_name.as_str();
+            let function_name_with_nul = function_name.to_owned() + "\0";
+            let ptr = ecx.allocate_bytes_dedup(function_name_with_nul.as_bytes()).unwrap();
+            let len = u64::try_from(function_name.len()).unwrap();
+            Immediate::new_slice(ptr.into(), len, ecx)
+        } else {
+            // Option<NunNull<str>>::None
+            Immediate::ScalarPair(Scalar::null_ptr(ecx), Scalar::from_target_usize(0, ecx))
+        }
+    };
     let line = if loc_details.line { Scalar::from_u32(line) } else { Scalar::from_u32(0) };
     let col = if loc_details.column { Scalar::from_u32(col) } else { Scalar::from_u32(0) };
 
@@ -43,9 +56,11 @@ fn alloc_caller_location<'tcx>(
     let location = ecx.allocate(loc_layout, MemoryKind::CallerLocation).unwrap();
 
     // Initialize fields.
-    let [filename_field, line_field, col_field] =
-        ecx.project_fields(&location, [0, 1, 2].map(FieldIdx::from_u32)).unwrap();
+    let [filename_field, function_name_field, line_field, col_field] =
+        ecx.project_fields(&location, [0, 1, 2, 3].map(FieldIdx::from_u32)).unwrap();
     ecx.write_immediate(filename, &filename_field)
+        .expect("writing to memory we just allocated cannot fail");
+    ecx.write_immediate(function_name, &function_name_field)
         .expect("writing to memory we just allocated cannot fail");
     ecx.write_scalar(line, &line_field).expect("writing to memory we just allocated cannot fail");
     ecx.write_scalar(col, &col_field).expect("writing to memory we just allocated cannot fail");
@@ -56,6 +71,7 @@ fn alloc_caller_location<'tcx>(
 pub(crate) fn const_caller_location_provider(
     tcx: TyCtxt<'_>,
     file: Symbol,
+    func: Symbol,
     line: u32,
     col: u32,
 ) -> mir::ConstValue {
@@ -67,7 +83,7 @@ pub(crate) fn const_caller_location_provider(
         CanAccessMutGlobal::No,
     );
 
-    let loc_place = alloc_caller_location(&mut ecx, file, line, col);
+    let loc_place = alloc_caller_location(&mut ecx, file, func, line, col);
     if intern_const_alloc_recursive(&mut ecx, InternKind::Constant, &loc_place).is_err() {
         bug!("intern_const_alloc_recursive should not error in this case")
     }

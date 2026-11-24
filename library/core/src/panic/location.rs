@@ -41,6 +41,7 @@ pub struct Location<'a> {
     // than the length stored in this pointer; the additional byte is the NUL-terminator used by
     // `Location::file_as_c_str`.
     filename: NonNull<str>,
+    func_name: Option<NonNull<str>>,
     line: u32,
     col: u32,
     _filename: PhantomData<&'a str>,
@@ -52,7 +53,10 @@ const impl PartialEq for Location<'_> {
     fn eq(&self, other: &Self) -> bool {
         // Compare col / line first as they're cheaper to compare and more likely to differ,
         // while not impacting the result.
-        self.col == other.col && self.line == other.line && self.file() == other.file()
+        self.col == other.col
+            && self.line == other.line
+            && self.file() == other.file()
+            && self.function() == other.function()
     }
 }
 
@@ -68,6 +72,7 @@ const impl Ord for Location<'_> {
             .cmp(other.file())
             .then_with(const || self.line.cmp(&other.line))
             .then_with(const || self.col.cmp(&other.col))
+            .then_with(const || self.function().cmp(other.function()))
     }
 }
 
@@ -85,6 +90,7 @@ impl Hash for Location<'_> {
         self.file().hash(state);
         self.line.hash(state);
         self.col.hash(state);
+        self.function().hash(state);
     }
 }
 
@@ -95,6 +101,7 @@ impl fmt::Debug for Location<'_> {
             .field("file", &self.file())
             .field("line", &self.line)
             .field("column", &self.col)
+            .field("function", &self.function())
             .finish()
     }
 }
@@ -296,6 +303,15 @@ impl<'a> Location<'a> {
     #[inline]
     pub const fn column(&self) -> u32 {
         self.col
+    }
+
+    /// Returns the name of the function from which the panic originated.
+    #[must_use]
+    #[unstable(feature = "location_function", issue = "95529")]
+    #[rustc_const_unstable(feature = "location_function", issue = "95529")]
+    pub const fn function(&self) -> Option<&'a str> {
+        // SAFETY: The function name is valid.
+        unsafe { Some(self.func_name?.as_ref()) }
     }
 }
 

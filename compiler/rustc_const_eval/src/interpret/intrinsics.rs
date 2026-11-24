@@ -319,8 +319,8 @@ impl<'tcx, M: Machine<'tcx>> InterpCx<'tcx, M> {
             }
 
             sym::caller_location => {
-                let span = self.caller_location();
-                let val = self.tcx.span_as_caller_location(span);
+                let (span, function_def) = self.caller_location();
+                let val = self.tcx.span_as_caller_location(span, function_def);
                 let val =
                     self.const_val_to_op(val, self.tcx.caller_location_ty(), Some(dest.layout))?;
                 self.copy_op(&val, dest)?;

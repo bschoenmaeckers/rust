@@ -2181,10 +2181,15 @@ impl<'a, 'tcx, Bx: BuilderMethods<'a, 'tcx>> FunctionCx<'a, 'tcx, Bx> {
         bx: &mut Bx,
         source_info: mir::SourceInfo,
     ) -> OperandRef<'tcx, Bx::Value> {
-        self.mir.caller_location_span(source_info, self.caller_location, bx.tcx(), |span: Span| {
-            let const_loc = bx.tcx().span_as_caller_location(span);
-            OperandRef::from_const(bx, const_loc, bx.tcx().caller_location_ty())
-        })
+        self.mir.caller_location(
+            source_info,
+            self.caller_location,
+            bx.tcx(),
+            |span: Span, function_def| {
+                let const_loc = bx.tcx().span_as_caller_location(span, function_def);
+                OperandRef::from_const(bx, const_loc, bx.tcx().caller_location_ty())
+            },
+        )
     }
 
     fn get_personality_slot(&mut self, bx: &mut Bx) -> PlaceRef<'tcx, Bx::Value> {

@@ -5,6 +5,7 @@ use std::{fmt, mem};
 
 use either::{Either, Left, Right};
 use rustc_hir as hir;
+use rustc_hir::def_id::DefId;
 use rustc_hir::definitions::DefPathData;
 use rustc_index::IndexVec;
 use rustc_middle::mir;
@@ -98,9 +99,9 @@ pub struct Frame<'tcx, Prov: Provenance = CtfeProvenance, Extra = ()> {
     /// frame is popped.
     pub(super) va_list: Vec<MPlaceTy<'tcx, Prov>>,
 
-    /// The implicit caller location argument that is passed by this function's caller, if any.
+    /// The implicit caller location and its function definition, passed by this function's caller.
     /// This is `Some` if and only if `instance.def.requires_caller_location` returns `true`.
-    pub(super) track_caller_arg: Option<Span>,
+    pub(super) track_caller_arg: Option<(Span, DefId)>,
 
     /// The span of the `tracing` crate is stored here.
     /// When the guard is dropped, the span is exited. This gives us

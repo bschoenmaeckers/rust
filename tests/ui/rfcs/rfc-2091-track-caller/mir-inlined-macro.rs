@@ -1,3 +1,4 @@
+#![feature(location_function)]
 //@ run-pass
 //@ revisions: default mir-opt
 //@[default] compile-flags: -Zinline-mir=no
@@ -18,6 +19,7 @@ fn g() -> &'static Location<'static> {
 
 fn main() {
     let loc = g();
-    assert_eq!(loc.line(), 16);
+    assert_eq!(loc.line(), 17);
     assert_eq!(loc.column(), 5);
+    assert_eq!(loc.function(), Some("g"));
 }

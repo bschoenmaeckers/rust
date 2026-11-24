@@ -66,7 +66,7 @@ declare_hooks! {
     hook try_destructure_mir_constant_for_user_output(val: mir::ConstValue, ty: Ty<'tcx>) -> Option<mir::DestructuredConstant<'tcx>>;
 
     /// Getting a &core::panic::Location referring to a span.
-    hook const_caller_location(file: rustc_span::Symbol, line: u32, col: u32) -> mir::ConstValue;
+    hook const_caller_location(file: rustc_span::Symbol, func: rustc_span::Symbol, line: u32, col: u32) -> mir::ConstValue;
 
     /// Imports all `SourceFile`s from the given crate into the current session.
     /// This normally happens automatically when we decode a `Span` from

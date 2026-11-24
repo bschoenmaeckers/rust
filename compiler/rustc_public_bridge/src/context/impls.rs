@@ -495,8 +495,8 @@ impl<'tcx, B: Bridge> CompilerCtxt<'tcx, B> {
     ///
     /// This produces a `&'static core::panic::Location<'static>` constant,
     /// which is the implicit extra argument for `#[track_caller]` functions.
-    pub fn span_as_caller_location(&self, span: Span) -> MirConst<'tcx> {
-        let val = self.tcx.span_as_caller_location(span);
+    pub fn span_as_caller_location(&self, span: Span, function_def: DefId) -> MirConst<'tcx> {
+        let val = self.tcx.span_as_caller_location(span, function_def);
         let ty = self.tcx.caller_location_ty();
         MirConst::from_value(val, ty)
     }

@@ -587,13 +587,14 @@ pub enum IncrementalStateAssertion {
 #[derive(Copy, Clone, PartialEq, Hash, Debug)]
 pub struct LocationDetail {
     pub file: bool,
+    pub func: bool,
     pub line: bool,
     pub column: bool,
 }
 
 impl LocationDetail {
     pub(crate) fn all() -> Self {
-        Self { file: true, line: true, column: true }
+        Self { file: true, func: true, line: true, column: true }
     }
 }
 
